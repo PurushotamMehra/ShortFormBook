@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 
 import '../models/book_chunk.dart';
 import '../models/reading_settings.dart';
+import '../screens/reader_screen.dart'
+    show kBoundaryBottom, kBoundaryTop, kContentPaddingH;
 
 class ReadingCard extends StatelessWidget {
   final BookChunk chunk;
-  final ReadingSettings? settings;
+  final ReadingSettings settings;
   final Function(String url)? onLinkTap;
   final bool isBookmarked;
   final VoidCallback? onBookmarkTap;
@@ -14,7 +16,7 @@ class ReadingCard extends StatelessWidget {
   const ReadingCard({
     super.key,
     required this.chunk,
-    this.settings,
+    required this.settings,
     this.onLinkTap,
     this.isBookmarked = false,
     this.onBookmarkTap,
@@ -23,38 +25,42 @@ class ReadingCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // If we have settings, apply them. Otherwise, provide defaults for compiling.
-    final bgColor = settings?.backgroundColor(context) ?? const Color(0xFFFAF8F5);
-    
-    // Default to left align if settings not provided 
-    final textAlign = settings?.textAlign == ReaderTextAlign.center ? TextAlign.center 
-        : settings?.textAlign == ReaderTextAlign.right ? TextAlign.right 
-        : settings?.textAlign == ReaderTextAlign.justify ? TextAlign.justify 
-        : TextAlign.left;
+    final bgColor = settings.backgroundColor;
+    final textAlign =
+        chunk.isHeading ? TextAlign.center : settings.resolvedTextAlign;
 
-    final horizontalPadding = 24.0;
+    final textStyle = settings.getTextStyle(isHeading: chunk.isHeading);
 
-    // Use passed settings or fallback defaults
-    final effectiveSettings = settings ?? const ReadingSettings();
+    // Safe-area insets: status bar at top, nav bar at bottom.
+    // The content must sit between the two boundary lines, which are
+    // positioned at (safeArea.top + kBoundaryTop) from the top and
+    // (safeArea.bottom + kBoundaryBottom) from the bottom.
+    final safeArea = MediaQuery.paddingOf(context);
+    final topPad = safeArea.top + kBoundaryTop;
+    final bottomPad = safeArea.bottom + kBoundaryBottom;
 
-    TextStyle textStyle = effectiveSettings.getTextStyle(context, isHeading: chunk.isHeading);
-
-    return Container(
-      color: bgColor,
-      child: Stack(
-        children: [
-          Center(
-            child: SingleChildScrollView(
-              physics: const NeverScrollableScrollPhysics(),
-              padding: EdgeInsets.fromLTRB(horizontalPadding, 52, horizontalPadding, 62),
+    return RepaintBoundary(
+      child: Container(
+        color: bgColor,
+        padding: EdgeInsets.fromLTRB(
+          kContentPaddingH,
+          topPad,
+          kContentPaddingH,
+          bottomPad,
+        ),
+        child: Stack(
+          children: [
+            // ── Main content (centered vertically inside the bounded area) ──
+            Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  if (chunk.type == BookChunkType.image && chunk.imageBytes != null)
+                  if (chunk.type == BookChunkType.image &&
+                      chunk.imageBytes != null)
                     Padding(
                       padding: const EdgeInsets.only(bottom: 16),
                       child: Image.memory(
-                        chunk.imageBytes! as dynamic, 
+                        chunk.imageBytes!,
                         fit: BoxFit.contain,
                       ),
                     ),
@@ -62,35 +68,38 @@ class ReadingCard extends StatelessWidget {
                     Text(
                       chunk.text!,
                       style: textStyle,
-                      textAlign: chunk.isHeading ? TextAlign.center : textAlign,
+                      textAlign: textAlign,
                     ),
                 ],
               ),
             ),
-          ),
-          
-          if (onBookmarkTap != null || onBookmarkLongPress != null)
-            Positioned(
-              top: MediaQuery.of(context).padding.top + 16,
-              right: 16,
-              child: GestureDetector(
-                onTap: onBookmarkTap,
-                onLongPress: onBookmarkLongPress,
-                child: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: isBookmarked ? bgColor.withValues(alpha: 0.8) : Colors.transparent,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    isBookmarked ? Icons.bookmark : Icons.bookmark_border,
-                    color: isBookmarked ? Colors.blue : Colors.transparent,
-                    size: 28,
+
+            // ── Bookmark icon ──
+            if (onBookmarkTap != null || onBookmarkLongPress != null)
+              Positioned(
+                top: 0,
+                right: 0,
+                child: GestureDetector(
+                  onTap: onBookmarkTap,
+                  onLongPress: onBookmarkLongPress,
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: isBookmarked
+                          ? bgColor.withValues(alpha: 0.8)
+                          : Colors.transparent,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      isBookmarked ? Icons.bookmark : Icons.bookmark_border,
+                      color: isBookmarked ? Colors.blue : Colors.transparent,
+                      size: 28,
+                    ),
                   ),
                 ),
               ),
-            ),
-        ],
+          ],
+        ),
       ),
     );
   }

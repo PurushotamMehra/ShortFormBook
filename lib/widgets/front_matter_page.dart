@@ -49,12 +49,19 @@ class _FrontMatterPageState extends State<FrontMatterPage> {
   double _overscrollAccumulator = 0;
   bool _isNavigating = false;
 
+  /// Gesture recognizers for link taps — must be disposed to prevent leaks.
+  final List<TapGestureRecognizer> _recognizers = [];
+
   /// How many overscroll pixels before we trigger a page change.
   static const _overscrollThreshold = 70.0;
 
   @override
   void dispose() {
     _scrollController.dispose();
+    for (final r in _recognizers) {
+      r.dispose();
+    }
+    _recognizers.clear();
     super.dispose();
   }
 
@@ -89,62 +96,64 @@ class _FrontMatterPageState extends State<FrontMatterPage> {
 
   @override
   Widget build(BuildContext context) {
-    final bgColor = widget.settings.backgroundColor(context);
-    final textColor = widget.settings.textColor(context);
-    final mutedColor = widget.settings.mutedColor(context);
-    final isDark = widget.settings.isDark(context);
-    final topPad = MediaQuery.of(context).padding.top;
-    final bottomPad = MediaQuery.of(context).padding.bottom;
+    final bgColor = widget.settings.backgroundColor;
+    final textColor = widget.settings.textColor;
+    final mutedColor = widget.settings.mutedColor;
+    final isDarkTheme = widget.settings.isDark;
+    final topPad = MediaQuery.paddingOf(context).top;
+    final bottomPad = MediaQuery.paddingOf(context).bottom;
 
-    return Container(
-      color: bgColor,
-      width: double.infinity,
-      height: double.infinity,
-      child: Column(
-        children: [
-          // ── Fixed top: label ──
-          SizedBox(height: topPad + 12),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(
-              color: isDark
-                  ? Colors.white.withValues(alpha: 0.06)
-                  : Colors.black.withValues(alpha: 0.04),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Text(
-              'FRONT MATTER',
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 1.5,
-                color: mutedColor.withValues(alpha: 0.5),
+    return RepaintBoundary(
+      child: Container(
+        color: bgColor,
+        width: double.infinity,
+        height: double.infinity,
+        child: Column(
+          children: [
+            // ── Fixed top: label ──
+            SizedBox(height: topPad + 12),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: isDarkTheme
+                    ? Colors.white.withValues(alpha: 0.12)
+                    : Colors.black.withValues(alpha: 0.04),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                'FRONT MATTER',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1.5,
+                  color: mutedColor.withValues(alpha: 0.5),
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: 12),
-
-          // ── Scrollable content ──
-          Expanded(
-            child: NotificationListener<ScrollNotification>(
-              onNotification: _handleScrollNotification,
-              child: SingleChildScrollView(
-                controller: _scrollController,
-                physics: const ClampingScrollPhysics(),
-                padding: const EdgeInsets.symmetric(horizontal: 28),
-                child: _buildContent(context, textColor, mutedColor),
-              ),
-            ),
-          ),
-
-          // ── "Start Reading" button on last FM page only ──
-          if (widget.isLastFrontMatter && widget.onStartReading != null) ...[
             const SizedBox(height: 12),
-            _buildStartReadingButton(isDark),
-          ],
 
-          SizedBox(height: bottomPad + 8),
-        ],
+            // ── Scrollable content ──
+            Expanded(
+              child: NotificationListener<ScrollNotification>(
+                onNotification: _handleScrollNotification,
+                child: SingleChildScrollView(
+                  controller: _scrollController,
+                  physics: const ClampingScrollPhysics(),
+                  padding: const EdgeInsets.symmetric(horizontal: 28),
+                  child: _buildContent(context, textColor, mutedColor),
+                ),
+              ),
+            ),
+
+            // ── "Start Reading" button on last FM page only ──
+            if (widget.isLastFrontMatter && widget.onStartReading != null) ...[
+              const SizedBox(height: 12),
+              _buildStartReadingButton(isDarkTheme),
+            ],
+
+            SizedBox(height: bottomPad + 8),
+          ],
+        ),
       ),
     );
   }
@@ -164,7 +173,7 @@ class _FrontMatterPageState extends State<FrontMatterPage> {
         child: Center(
           child: ConstrainedBox(
             constraints: BoxConstraints(
-              maxHeight: MediaQuery.of(context).size.height * 0.7,
+              maxHeight: MediaQuery.sizeOf(context).height * 0.7,
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(8),
@@ -195,21 +204,20 @@ class _FrontMatterPageState extends State<FrontMatterPage> {
     );
   }
 
-  Widget _buildStartReadingButton(bool isDark) {
+  Widget _buildStartReadingButton(bool isDarkTheme) {
+    final primaryColor = Theme.of(context).colorScheme.primary;
     return GestureDetector(
       onTap: widget.onStartReading,
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 32),
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: isDark
-                ? [const Color(0xFF5C7AEA), const Color(0xFF7B68EE)]
-                : [const Color(0xFF4A90D9), const Color(0xFF5C7AEA)],
+            colors: [primaryColor, primaryColor.withValues(alpha: 0.8)],
           ),
           borderRadius: BorderRadius.circular(28),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF5C7AEA).withValues(alpha: 0.3),
+              color: primaryColor.withValues(alpha: 0.3),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),
@@ -243,9 +251,9 @@ class _FrontMatterPageState extends State<FrontMatterPage> {
   TextStyle _textStyle(Color textColor) {
     if (widget.chunk.isHeading) {
       return GoogleFonts.inter(
-        fontSize: 18, // slightly larger
-        fontWeight: FontWeight.w700, // bolder
-        color: textColor, // not faded like normal text
+        fontSize: 18,
+        fontWeight: FontWeight.w700,
+        color: textColor,
         height: 1.4,
         letterSpacing: 0.3,
       );
@@ -260,6 +268,12 @@ class _FrontMatterPageState extends State<FrontMatterPage> {
   }
 
   List<InlineSpan> _buildSpans(Color textColor) {
+    // Dispose old recognizers from previous build
+    for (final r in _recognizers) {
+      r.dispose();
+    }
+    _recognizers.clear();
+
     final text = widget.chunk.text ?? '';
     final links = widget.chunk.links ?? [];
 
@@ -277,6 +291,10 @@ class _FrontMatterPageState extends State<FrontMatterPage> {
         spans.add(TextSpan(text: text.substring(currentPos, start)));
       }
 
+      final recognizer = TapGestureRecognizer()
+        ..onTap = () => widget.onLinkTap?.call(link.url);
+      _recognizers.add(recognizer);
+
       spans.add(
         TextSpan(
           text: text.substring(start, end),
@@ -285,8 +303,7 @@ class _FrontMatterPageState extends State<FrontMatterPage> {
             decoration: TextDecoration.underline,
             decorationColor: Color(0xFF5C7AEA),
           ),
-          recognizer: TapGestureRecognizer()
-            ..onTap = () => widget.onLinkTap?.call(link.url),
+          recognizer: recognizer,
         ),
       );
       currentPos = end;

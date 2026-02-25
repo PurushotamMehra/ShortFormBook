@@ -8,15 +8,21 @@ import '../models/bookmark.dart';
 /// Bookmarks are auto-named sequentially ("Bookmark 1", "Bookmark 2", …).
 class BookmarkService {
   final String bookId;
+  SharedPreferences? _prefs;
 
   BookmarkService({required this.bookId});
 
   String get _key => 'bookmarks_$bookId';
 
+  Future<SharedPreferences> get _cachedPrefs async {
+    _prefs ??= await SharedPreferences.getInstance();
+    return _prefs!;
+  }
+
   // ── Read ──────────────────────────────────────────────────────────────
 
   Future<List<Bookmark>> load() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _cachedPrefs;
     final raw = prefs.getString(_key);
     if (raw == null || raw.isEmpty) return [];
     return Bookmark.decodeList(raw);
@@ -56,14 +62,16 @@ class BookmarkService {
 
   Future<List<Bookmark>> rename(int chunkIndex, String newName) async {
     final list = await load();
+    final updated = <Bookmark>[];
     for (final b in list) {
       if (b.chunkIndex == chunkIndex) {
-        b.name = newName;
-        break;
+        updated.add(b.copyWith(name: newName));
+      } else {
+        updated.add(b);
       }
     }
-    await _save(list);
-    return list;
+    await _save(updated);
+    return updated;
   }
 
   /// Check if a specific chunk is bookmarked.
@@ -73,7 +81,7 @@ class BookmarkService {
   // ── Internal ──────────────────────────────────────────────────────────
 
   Future<void> _save(List<Bookmark> list) async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _cachedPrefs;
     await prefs.setString(_key, Bookmark.encodeList(list));
   }
 }

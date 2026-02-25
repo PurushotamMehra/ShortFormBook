@@ -95,9 +95,9 @@ class _NavigationPanelState extends State<NavigationPanel> {
       length: 2,
       child: Container(
         height: MediaQuery.of(context).size.height * 0.6,
-        decoration: const BoxDecoration(
-          color: Color(0xFFFAF8F5),
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
         ),
         child: Column(
           children: [
@@ -107,23 +107,26 @@ class _NavigationPanelState extends State<NavigationPanel> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: const Color(0xFFBDBDBD),
+                color: Colors.grey[700],
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
             // Tab bar
-            const TabBar(
-              labelColor: Color(0xFF2C2C2C),
-              unselectedLabelColor: Color(0xFF9E9E9E),
-              indicatorColor: Color(0xFFE85D04),
+            TabBar(
+              labelColor: Theme.of(context).colorScheme.onSurface,
+              unselectedLabelColor: Colors.grey,
+              indicatorColor: Theme.of(context).colorScheme.primary,
               indicatorWeight: 3,
-              labelStyle: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
-              tabs: [
+              labelStyle: const TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+              ),
+              tabs: const [
                 Tab(text: 'Bookmarks'),
                 Tab(text: 'Chapters'),
               ],
             ),
-            const Divider(height: 1, color: Color(0xFFE0E0E0)),
+            Divider(height: 1, color: Colors.grey[800]),
             // Tab views
             Expanded(
               child: TabBarView(
@@ -143,20 +146,20 @@ class _NavigationPanelState extends State<NavigationPanel> {
     final totalItems = widget.bookmarks.length + (hasTemp ? 1 : 0);
 
     if (totalItems == 0) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.bookmark_border, size: 48, color: Color(0xFFBDBDBD)),
-            SizedBox(height: 12),
-            Text(
+            const Icon(Icons.bookmark_border, size: 48, color: Colors.grey),
+            const SizedBox(height: 12),
+            const Text(
               'No bookmarks yet',
-              style: TextStyle(fontSize: 16, color: Color(0xFF9E9E9E)),
+              style: TextStyle(fontSize: 16, color: Colors.grey),
             ),
-            SizedBox(height: 4),
+            const SizedBox(height: 4),
             Text(
               'Tap the bookmark icon on any card to add one',
-              style: TextStyle(fontSize: 13, color: Color(0xFFBDBDBD)),
+              style: TextStyle(fontSize: 13, color: Colors.grey[600]),
             ),
           ],
         ),
@@ -167,13 +170,13 @@ class _NavigationPanelState extends State<NavigationPanel> {
       padding: const EdgeInsets.symmetric(vertical: 8),
       itemCount: totalItems,
       separatorBuilder: (_, __) =>
-          const Divider(height: 1, indent: 56, color: Color(0xFFF0F0F0)),
+          Divider(height: 1, indent: 56, color: Colors.grey[800]),
       itemBuilder: (context, index) {
         // Temp bookmark always shows first
         if (hasTemp && index == 0) {
           return _buildNavTile(
             icon: Icons.history,
-            iconColor: const Color(0xFF9E9E9E),
+            iconColor: Colors.grey,
             title: '↩ Back to page ${widget.tempBookmarkIndex! + 1}',
             subtitle: 'Last reading position',
             onTap: () => widget.onNavigate(widget.tempBookmarkIndex!),
@@ -185,7 +188,7 @@ class _NavigationPanelState extends State<NavigationPanel> {
 
         return _buildNavTile(
           icon: Icons.bookmark,
-          iconColor: const Color(0xFFE85D04),
+          iconColor: Theme.of(context).colorScheme.primary,
           title: bookmark.name,
           subtitle: 'Page ${bookmark.chunkIndex + 1}',
           onTap: () => widget.onNavigate(bookmark.chunkIndex),
@@ -202,11 +205,11 @@ class _NavigationPanelState extends State<NavigationPanel> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.menu_book, size: 48, color: Color(0xFFBDBDBD)),
+            Icon(Icons.menu_book, size: 48, color: Colors.grey),
             SizedBox(height: 12),
             Text(
               'No chapters found',
-              style: TextStyle(fontSize: 16, color: Color(0xFF9E9E9E)),
+              style: TextStyle(fontSize: 16, color: Colors.grey),
             ),
           ],
         ),
@@ -234,7 +237,7 @@ class _NavigationPanelState extends State<NavigationPanel> {
           _buildExpandableSection(
             title: 'Book Details',
             icon: Icons.info_outline,
-            iconColor: const Color(0xFF9E9E9E),
+            iconColor: Colors.grey,
             initiallyExpanded: false,
             children: bookDetails,
           ),
@@ -253,7 +256,7 @@ class _NavigationPanelState extends State<NavigationPanel> {
       // Leaf node — simple tile.
       return _buildNavTile(
         icon: Icons.article_outlined,
-        iconColor: const Color(0xFF5C7AEA),
+        iconColor: Theme.of(context).colorScheme.onSurface,
         title: chapter.title,
         subtitle: 'Page ${chapter.chunkIndex + 1}',
         onTap: () => widget.onNavigate(chapter.chunkIndex),
@@ -270,7 +273,7 @@ class _NavigationPanelState extends State<NavigationPanel> {
     return _buildExpandableSection(
       title: chapter.title,
       icon: Icons.folder_outlined,
-      iconColor: const Color(0xFF2C2C2C),
+      iconColor: Theme.of(context).colorScheme.onSurface,
       initiallyExpanded: containsCurrentPage,
       onHeaderTap: () => widget.onNavigate(chapter.chunkIndex),
       children: chapter.children,
@@ -317,10 +320,10 @@ class _NavigationPanelState extends State<NavigationPanel> {
           onTap: onHeaderTap,
           child: Text(
             title,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w600,
-              color: Color(0xFF2C2C2C),
+              color: Theme.of(context).colorScheme.onSurface,
             ),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
@@ -329,8 +332,8 @@ class _NavigationPanelState extends State<NavigationPanel> {
         initiallyExpanded: initiallyExpanded,
         tilePadding: const EdgeInsets.symmetric(horizontal: 16),
         childrenPadding: const EdgeInsets.only(left: 16),
-        iconColor: const Color(0xFF9E9E9E),
-        collapsedIconColor: const Color(0xFFBDBDBD),
+        iconColor: Colors.grey,
+        collapsedIconColor: Colors.grey,
         children: children.map((ch) {
           if (ch.children.isNotEmpty) {
             // Nested sub-section.
@@ -338,7 +341,7 @@ class _NavigationPanelState extends State<NavigationPanel> {
           }
           return _buildNavTile(
             icon: Icons.article_outlined,
-            iconColor: const Color(0xFF5C7AEA),
+            iconColor: Theme.of(context).colorScheme.onSurface,
             title: ch.title,
             subtitle: 'Page ${ch.chunkIndex + 1}',
             onTap: () => widget.onNavigate(ch.chunkIndex),
@@ -361,10 +364,10 @@ class _NavigationPanelState extends State<NavigationPanel> {
       leading: Icon(icon, color: iconColor, size: 24),
       title: Text(
         title,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.w500,
-          color: Color(0xFF2C2C2C),
+          color: Theme.of(context).colorScheme.onSurface,
         ),
         maxLines: 2,
         overflow: TextOverflow.ellipsis,
@@ -372,14 +375,10 @@ class _NavigationPanelState extends State<NavigationPanel> {
       subtitle: subtitle != null
           ? Text(
               subtitle,
-              style: const TextStyle(fontSize: 12, color: Color(0xFF9E9E9E)),
+              style: const TextStyle(fontSize: 12, color: Colors.grey),
             )
           : null,
-      trailing: const Icon(
-        Icons.chevron_right,
-        color: Color(0xFFBDBDBD),
-        size: 20,
-      ),
+      trailing: const Icon(Icons.chevron_right, color: Colors.grey, size: 20),
       dense: true,
       visualDensity: VisualDensity.compact,
       onTap: onTap,

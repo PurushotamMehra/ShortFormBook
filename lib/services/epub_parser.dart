@@ -357,7 +357,14 @@ class EpubParserService {
 
             // ── Block elements → flush BEFORE entering ──
             final isBlock = _blockTags.contains(node.localName);
-            final isHeadingNode = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'].contains(node.localName);
+            final isHeadingNode = [
+              'h1',
+              'h2',
+              'h3',
+              'h4',
+              'h5',
+              'h6',
+            ].contains(node.localName);
 
             if (isBlock) {
               flush(); // each block element starts a new card
@@ -533,7 +540,7 @@ class EpubParserService {
     final html = book.Content?.Html;
     if (html == null || html.isEmpty) {
       return [
-        BookChunk(
+        const BookChunk(
           index: 0,
           type: BookChunkType.text,
           text: 'Could not parse this book.',
@@ -553,7 +560,7 @@ class EpubParserService {
     final fullText = buf.toString().trim();
     if (fullText.isEmpty) {
       return [
-        BookChunk(
+        const BookChunk(
           index: 0,
           type: BookChunkType.text,
           text: 'Could not parse this book.',

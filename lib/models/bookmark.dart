@@ -1,13 +1,24 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
+
 /// A user-created bookmark pointing to a specific card in the book.
+@immutable
 class Bookmark {
   final int chunkIndex;
-  String name;
+  final String name;
   final DateTime createdAt;
 
   Bookmark({required this.chunkIndex, required this.name, DateTime? createdAt})
     : createdAt = createdAt ?? DateTime.now();
+
+  Bookmark copyWith({int? chunkIndex, String? name, DateTime? createdAt}) {
+    return Bookmark(
+      chunkIndex: chunkIndex ?? this.chunkIndex,
+      name: name ?? this.name,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
 
   Map<String, dynamic> toJson() => {
     'chunkIndex': chunkIndex,
@@ -32,6 +43,7 @@ class Bookmark {
 /// Chapter/section metadata from the EPUB Table of Contents.
 ///
 /// Supports arbitrary nesting: Part → Chapter → Section → …
+@immutable
 class ChapterInfo {
   final String title;
   final int chunkIndex;

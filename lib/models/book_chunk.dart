@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 
 /// Types of content in a book chunk.
 enum BookChunkType { text, image }
@@ -12,6 +13,7 @@ enum ChunkSection {
 }
 
 /// A link within a text chunk.
+@immutable
 class LinkMetadata {
   final int start;
   final int end;
@@ -22,15 +24,24 @@ class LinkMetadata {
     required this.end,
     required this.url,
   });
+
+  LinkMetadata copyWith({int? start, int? end, String? url}) {
+    return LinkMetadata(
+      start: start ?? this.start,
+      end: end ?? this.end,
+      url: url ?? this.url,
+    );
+  }
 }
 
 /// Represents a single readable chunk (card) of content from an EPUB book.
+@immutable
 class BookChunk {
   final int index;
   final BookChunkType type;
   final ChunkSection section;
   final String? text;
-  final List<int>? imageBytes; // store as raw bytes
+  final Uint8List? imageBytes;
   final List<LinkMetadata>? links;
 
   /// Whether this chunk represents a heading (h1-h6).
@@ -62,4 +73,26 @@ class BookChunk {
     isHeading: isHeading,
     sourceFile: sourceFile,
   );
+
+  BookChunk copyWith({
+    int? index,
+    BookChunkType? type,
+    ChunkSection? section,
+    String? text,
+    Uint8List? imageBytes,
+    List<LinkMetadata>? links,
+    bool? isHeading,
+    String? sourceFile,
+  }) {
+    return BookChunk(
+      index: index ?? this.index,
+      type: type ?? this.type,
+      section: section ?? this.section,
+      text: text ?? this.text,
+      imageBytes: imageBytes ?? this.imageBytes,
+      links: links ?? this.links,
+      isHeading: isHeading ?? this.isHeading,
+      sourceFile: sourceFile ?? this.sourceFile,
+    );
+  }
 }
